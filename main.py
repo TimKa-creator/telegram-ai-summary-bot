@@ -15,7 +15,7 @@ import ai_module
 import youtube_module
 
 # Твій токен
-TOKEN = "8525446153:AAGXqp11qagsiJVWKgIE2lDPrEzKqhnCSDE"
+TOKEN = "your token"
 
 dp = Dispatcher()
 # Вмикаємо глобальний режим HTML
@@ -203,4 +203,5 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
     asyncio.run(main())
