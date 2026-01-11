@@ -8,20 +8,16 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, BotCommand
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
-# Імпорт твоїх модулів
+в
 import doc_module
 import ai_module
 import youtube_module
 
-# Твій токен
-TOKEN = "your token"
+TOKEN = "your tg token"
 
 dp = Dispatcher()
-# Вмикаємо глобальний режим HTML
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-# --- ПАМ'ЯТЬ ТА СТИЛІ ---
 user_styles = {}
 
 STYLES = {
@@ -57,7 +53,6 @@ def get_style_keyboard():
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-# --- НОВА РОЗУМНА ВІДПРАВКА (Без розриву тегів) ---
 async def smart_reply(message: types.Message, text: str):
     """Розбиває текст по рядках, щоб не ламати HTML-теги"""
     
@@ -65,33 +60,25 @@ async def smart_reply(message: types.Message, text: str):
     parts = []
     current_part = ""
 
-    # Розбиваємо текст на рядки
     lines = text.split('\n')
 
     for line in lines:
-        # Якщо додавання нового рядка перевищить ліміт
         if len(current_part) + len(line) + 1 > MAX_LENGTH:
-            # Зберігаємо поточний шматок і починаємо новий
             parts.append(current_part)
             current_part = line + "\n"
         else:
             current_part += line + "\n"
-    
-    # Додаємо останній шматок
+    к
     if current_part:
         parts.append(current_part)
 
-    # Відправляємо шматки по черзі
     for part in parts:
         try:
-            # Спроба 1: HTML
             await message.answer(part, parse_mode=ParseMode.HTML)
         except Exception as e:
             print(f"⚠️ Помилка HTML: {e}. Відправляю текстом.")
-            # Спроба 2: Текст (якщо AI згенерував кривий HTML)
             await message.answer(part, parse_mode=None)
 
-# --- КОМАНДИ ---
 
 @dp.message(CommandStart())
 async def start(message: types.Message):
@@ -132,7 +119,6 @@ async def set_style(callback: CallbackQuery):
     await callback.message.edit_text(f"✅ Готово! Тепер стиль: <b>{style_name}</b>")
     await callback.answer()
 
-# --- ОБРОБКА КОНТЕНТУ ---
 
 async def process_content(message: types.Message, text: str, content_type: str):
     user_id = message.from_user.id
@@ -143,15 +129,12 @@ async def process_content(message: types.Message, text: str, content_type: str):
 
     status_msg = await message.answer(f"🧠 Аналізую (<b>{style_name}</b>)...")
 
-    # Генерація
     summary = await ai_module.summarize(text, custom_prompt=style_prompt)
     
     await status_msg.delete()
     
-    # Заголовок
     await message.answer(f"📄 <b>Конспект ({content_type}):</b>")
     
-    # Розумна відправка
     await smart_reply(message, summary)
 
 @dp.message(F.document)
@@ -203,5 +186,5 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-
     asyncio.run(main())
+
