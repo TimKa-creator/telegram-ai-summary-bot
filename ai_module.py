@@ -1,21 +1,17 @@
 import google.generativeai as genai
 
-# !!! ВСТАВ СЮДИ СВІЙ КЛЮЧ !!!
-GOOGLE_API_KEY = "ТВІЙ_КЛЮЧ_ВІД_GEMINI"
+GOOGLE_API_KEY = "yourkey"
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
 async def summarize(text: str, custom_prompt: str = None) -> str:
-    # Використовуємо твою модель
-    model_name = 'models/gemini-2.0-flash' # або gemini-1.5-flash
+    model_name = 'models/gemini-2.0-flash'
 
     try:
         model = genai.GenerativeModel(model_name)
         
-        # Обрізаємо текст (безпечний ліміт)
         safe_text = text[:40000]
         
-        # --- ВИПРАВЛЕНА ІНСТРУКЦІЯ ---
         format_instruction = (
             "ВАЖЛИВО: Ти формуєш відповідь для Telegram бота.\n"
             "Дотримуйся суворих правил форматування HTML:\n"
@@ -37,12 +33,16 @@ async def summarize(text: str, custom_prompt: str = None) -> str:
         
         response = await model.generate_content_async(full_prompt)
         
-        # Фінальна зачистка (на випадок, якщо ШІ не послухався)
         clean_text = response.text
-        clean_text = clean_text.replace("<p>", "").replace("</p>", "\n") # Міняємо параграфи на відступи
-        clean_text = clean_text.replace("##", "").replace("**", "")      # Прибираємо Markdown
+        clean_text = clean_text.replace("<p>", "").replace("</p>", "\n")
+        clean_text = clean_text.replace("##", "").replace("**", "") 
         
         return clean_text
         
     except Exception as e:
+        return f"Помилка AI: {e}"
+        return clean_text
+        
+    except Exception as e:
+
         return f"Помилка AI: {e}"
