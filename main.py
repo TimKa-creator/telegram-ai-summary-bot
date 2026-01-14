@@ -8,12 +8,11 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, BotCommand
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-в
 import doc_module
 import ai_module
 import youtube_module
 
-TOKEN = "your tg token"
+TOKEN = "your token"
 
 dp = Dispatcher()
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -54,8 +53,6 @@ def get_style_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 async def smart_reply(message: types.Message, text: str):
-    """Розбиває текст по рядках, щоб не ламати HTML-теги"""
-    
     MAX_LENGTH = 4000
     parts = []
     current_part = ""
@@ -68,7 +65,7 @@ async def smart_reply(message: types.Message, text: str):
             current_part = line + "\n"
         else:
             current_part += line + "\n"
-    к
+    
     if current_part:
         parts.append(current_part)
 
@@ -127,14 +124,16 @@ async def process_content(message: types.Message, text: str, content_type: str):
     style_prompt = STYLES[style_key]["prompt"]
     style_name = STYLES[style_key]["name"]
 
-    status_msg = await message.answer(f"🧠 Аналізую (<b>{style_name}</b>)...")
+    wait_msg = await message.answer(f"🧠 Аналізую (<b>{style_name}</b>)...")
 
     summary = await ai_module.summarize(text, custom_prompt=style_prompt)
     
-    await status_msg.delete()
+    try:
+        await wait_msg.delete()
+    except:
+        pass
     
     await message.answer(f"📄 <b>Конспект ({content_type}):</b>")
-    
     await smart_reply(message, summary)
 
 @dp.message(F.document)
@@ -155,13 +154,25 @@ async def handle_files(message: types.Message):
         os.remove(path)
 
         if not text:
-            await wait_msg.edit_text("❌ Пустий файл або скан-копія.")
+            try:
+                await wait_msg.edit_text("❌ Пустий файл або скан-копія.")
+            except:
+                await message.answer("❌ Пустий файл або скан-копія.")
             return
             
-        await wait_msg.delete()
+        try:
+            await wait_msg.delete()
+        except:
+            pass
+
         await process_content(message, text, doc.file_name)
+
     except Exception as e:
-        await wait_msg.edit_text(f"Помилка: {e}")
+        print(f"Error handling file: {e}")
+        try:
+            await wait_msg.edit_text(f"Помилка: {e}")
+        except:
+            await message.answer(f"Помилка: {e}")
 
 @dp.message(F.text.contains("youtu"))
 async def handle_youtube(message: types.Message):
@@ -169,10 +180,17 @@ async def handle_youtube(message: types.Message):
     text = await asyncio.to_thread(youtube_module.get_video_transcript, message.text)
     
     if not text:
-        await wait_msg.edit_text("❌ Субтитри не знайдено.")
+        try:
+            await wait_msg.edit_text("❌ Субтитри не знайдено.")
+        except:
+            await message.answer("❌ Субтитри не знайдено.")
         return
 
-    await wait_msg.delete()
+    try:
+        await wait_msg.delete()
+    except:
+        pass
+
     await process_content(message, text, "YouTube Відео")
 
 async def main():
@@ -181,10 +199,13 @@ async def main():
         BotCommand(command="style", description="🎨 Налаштування"),
         BotCommand(command="help", description="🆘 Допомога"),
     ])
-    print("✅ Бот (v2.1 HTML Fix) запущено!")
+    print("✅ Бот запущено!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    asyncio.run(main())
+
 
